@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">AMeter App</string>
+    <string name="accelerometer_sensor">Accelerometer Sensor</string>
+    <string name="timer">Timer</string>
+    <string name="exercise_name">Exercise Name</string>
+    <string name="value_z">Z</string>
+    <string name="value_y">Y</string>
+    <string name="value_x">X</string>
+    <string name="value_Number_0">0</string>
+    <string name="submit">Submit</string>
+    <string name="start">Start</string>
+</resources>
