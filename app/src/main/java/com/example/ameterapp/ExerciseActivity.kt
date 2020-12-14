@@ -1,17 +1,19 @@
 package com.example.ameterapp
 
-import android.content.Intent
 import android.hardware.Sensor
 import android.hardware.SensorManager
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.os.Environment
 import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.ameterapp.Data.ExcelDAO
+import com.example.ameterapp.Data.ExcelModel
 import java.io.File
 import java.util.*
 
@@ -19,72 +21,30 @@ class ExerciseActivity : AppCompatActivity(), SensorEventListener {
     //  Declared Buttons
     private lateinit var mStartExerciseBtn: Button
     private lateinit var mSubmitExerciseBtn: Button
+    private lateinit var mStopBtn: Button
 
     // Declared Name, Timer
     private lateinit var mSetExerciseName: TextView
     private lateinit var mExerciseTimer: TextView
 
     //  Declared X, Y, Z
-    private lateinit var mValueNumbOfX: TextView
-    private lateinit var mValueNumbOfY: TextView
-    private lateinit var mValueNumbOfZ: TextView
+    private var mValueNumbOfX: TextView? = null
+    private var mValueNumbOfY: TextView? = null
+    private var mValueNumbOfZ: TextView? = null
 
     //     Declared Sensor
-    private lateinit var sensorManager: SensorManager
+    private var mSensorManager: SensorManager? = null
+    private var mAccelerometer: Sensor? = null
+    private lateinit var countDownTimer: CountDownTimer
 
 
+    private val CSV_HEADER = "ValueOfX,ValueOfY,ValueOfZ"
+//    val TAG: String = "ExecriseActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_exercise)
-//        Sensor
-        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
-//      Default Sensor
-        sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)?.also { accelerometer ->
-            sensorManager.registerListener(
-                this,
-                accelerometer,
-                SensorManager.SENSOR_DELAY_NORMAL,
-                SensorManager.SENSOR_DELAY_UI
-            )
-        }
-//        Initialized View
-        initView()
-        isExternalStorageReadAble()
-        isExternalStorageWriteAble()
-        writeFile()
-    }
 
-    private fun writeFile() {
-        if(isExternalStorageWriteAble()){
-            val file : File = File(Environment.getExternalStorageDirectory(),"HELLO")
-        }
-    }
-
-    private fun isExternalStorageWriteAble(): Boolean {
-        return if (Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()) {
-            Toast.makeText(applicationContext, "Writeable", Toast.LENGTH_SHORT).show()
-            true
-        } else {
-            Toast.makeText(applicationContext, "Not Able to write", Toast.LENGTH_SHORT).show()
-            false
-        }
-    }
-
-    private fun isExternalStorageReadAble(): Boolean {
-        return if (Environment.MEDIA_MOUNTED ==
-            Environment.getExternalStorageState() ||
-            Environment.MEDIA_MOUNTED_READ_ONLY == Environment.getExternalStorageState()
-        ) {
-            Toast.makeText(applicationContext, "Readable", Toast.LENGTH_SHORT).show()
-            true
-        } else {
-            Toast.makeText(applicationContext, "Not Able To Read", Toast.LENGTH_SHORT).show()
-            false
-        }
-    }
-
-    private fun initView() {
         //      Initialized Get Intent Data
         val userExerciseName = intent!!.getStringExtra("UserMessage")
         Toast.makeText(applicationContext, "$userExerciseName", Toast.LENGTH_SHORT).show()
@@ -101,55 +61,188 @@ class ExerciseActivity : AppCompatActivity(), SensorEventListener {
 //        Initialized Buttons
         mSubmitExerciseBtn = findViewById(R.id.submitExerciseDataBtn)
         mStartExerciseBtn = findViewById(R.id.startBtn)
-//        Set Clicks
-        mStartExerciseBtn.setOnClickListener {
-            startExerciseNow()
-        }
+        mStopBtn = findViewById(R.id.stopBtn)
+
         mSubmitExerciseBtn.setOnClickListener {
             submitExerciseData()
+        }
+//        Sensor
+        //        Set Clicks
+        mStartExerciseBtn.setOnClickListener {
+            startExerciseNow()
+
+        }
+        mStopBtn.setOnClickListener {
+            stopAction()
+        }
+
+//      Initialized View
+        initSensor()
+//        isExternalStorageReadAble()
+//        isExternalStorageWriteAble()
+//        writeFile()
+    }
+
+    private fun initSensor() {
+        mSensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
+        mAccelerometer = mSensorManager?.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
+        if (mAccelerometer == null) {
+            Toast.makeText(this, "Accelerometer sensor not available", Toast.LENGTH_SHORT).show()
+            finish()
+        }
+    }
+
+    private fun writeFile() {
+        if (isExternalStorageWriteAble()) {
+            val file: File = File(Environment.getExternalStorageDirectory(), "HELLO")
+        }
+    }
+
+    private fun isExternalStorageWriteAble(): Boolean {
+        return if (Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()) {
+            Toast.makeText(applicationContext, "Writeable", Toast.LENGTH_SHORT).show()
+            true
+        } else {
+            Toast.makeText(applicationContext, "Not Able to write", Toast.LENGTH_SHORT).show()
+            false
+        }
+    }
+
+    private fun isExternalStorageReadAble(): Boolean {
+        return if (Environment.MEDIA_MOUNTED ==
+                Environment.getExternalStorageState() ||
+                Environment.MEDIA_MOUNTED_READ_ONLY == Environment.getExternalStorageState()
+        ) {
+            Toast.makeText(applicationContext, "Readable", Toast.LENGTH_SHORT).show()
+            true
+        } else {
+            Toast.makeText(applicationContext, "Not Able To Read", Toast.LENGTH_SHORT).show()
+            false
         }
     }
 
     //    Start Exercise Now Function
     private fun startExerciseNow() {
+        //      Default Sensor
+        mSensorManager?.registerListener(
+                this,
+                mAccelerometer,
+                SensorManager.SENSOR_DELAY_NORMAL
+        )
+        startMyCounter()
+        countDownTimer.start()
+    }
 
+    private fun startMyCounter() {
+        countDownTimer = object : CountDownTimer(30000 + 100, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                val counter = millisUntilFinished / 1000;
+                mExerciseTimer.text = counter.toString()
+            }
+
+            override fun onFinish() {
+                callOnFinish()
+            }
+        }
+    }
+
+    private fun callOnFinish() {
+        mSensorManager?.unregisterListener(this)
+    }
+
+    private fun stopAction() {
+        countDownTimer.cancel()
+        mSensorManager?.unregisterListener(this)
+    }
+
+    override fun onSensorChanged(event: SensorEvent?) {
+//        Log.d("SENSORS", "onSensorChanged: The values are ${Arrays.toString(event?.values)}")
+        Log.d("SENSORS", "onSensorChanged: The values are ${Arrays.toString(event?.values)}")
+
+        val mX = event?.values?.get(0).toString()
+        val mY = event?.values?.get(1).toString()
+        val mZ = event?.values?.get(2).toString()
+
+        mValueNumbOfX?.text = mX
+        mValueNumbOfY?.text = mY
+        mValueNumbOfZ?.text = mZ
+
+        val myValues = listOf(
+                ExcelModel( 0,mX, mY, mZ)
+        )
+
+
+
+//        saveAndDisplayValues(mX, mY, mZ)
     }
 
     //    Submit Exercise Data to CSV File
     private fun submitExerciseData() {
-
+        Toast.makeText(this, "Saved!", Toast.LENGTH_SHORT).show()
     }
 
-    override fun onSensorChanged(event: SensorEvent?) {
-        Log.d("SENSORS", "onSensorChanged: The values are ${Arrays.toString(event?.values)}")
-
-        val mX = event?.values?.get(0)
-        val mY = event?.values?.get(1)
-        val mZ = event?.values?.get(2)
-
-        mValueNumbOfX.text = mX.toString()
-        mValueNumbOfY.text = mY.toString()
-        mValueNumbOfZ.text = mZ.toString()
-
-    }
+//    private fun saveAndDisplayValues(mX: String?, mY: String?, mZ: String?) {
+//
+//        var fileWriter: FileWriter? = null
+//        try {
+//            fileWriter = FileWriter("excel.csv")
+//
+//            fileWriter.append(CSV_HEADER)
+//            fileWriter.append('\n')
+//
+//            for (myValue in myValues) {
+//                fileWriter.append(myValue.valueOfX)
+//                fileWriter.append(',')
+//                fileWriter.append(myValue.valueOfY)
+//                fileWriter.append(',')
+//                fileWriter.append(myValue.valueOfZ)
+//                fileWriter.append('\n')
+//            }
+//
+//            println("Write CSV successfully!")
+//        } catch (e: Exception) {
+//            println("Writing CSV error!")
+//            e.printStackTrace()
+//        } finally {
+//            try {
+//                fileWriter!!.flush()
+//                fileWriter.close()
+//            } catch (e: IOException) {
+//                println("Flushing/closing error!")
+//                e.printStackTrace()
+//            }
+//        }
+//
+//    }
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
 
     }
 
+    override fun onStop() {
+        super.onStop()
+        mSensorManager!!.unregisterListener(this)
+    }
+
     override fun onResume() {
-        sensorManager.registerListener(
-            this,
-            sensorManager.getDefaultSensor(
-                Sensor.TYPE_ACCELEROMETER
-            ),
-            SensorManager.SENSOR_DELAY_NORMAL
+        mSensorManager!!.registerListener(
+                this,
+                mSensorManager?.getDefaultSensor(
+                        Sensor.TYPE_ACCELEROMETER
+                ),
+                SensorManager.SENSOR_DELAY_NORMAL
         )
         super.onResume()
     }
 
     override fun onPause() {
-        sensorManager.unregisterListener(this)
+        mSensorManager!!.unregisterListener(this)
         super.onPause()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mSensorManager!!.unregisterListener(this)
+
     }
 }
