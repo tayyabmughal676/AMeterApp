@@ -75,7 +75,6 @@ fun writeExcelFile() {
 
     try {
         fileWriter = FileWriter("customer.csv")
-
         fileWriter.append(CSV_HEADER)
         fileWriter.append('\n')
 

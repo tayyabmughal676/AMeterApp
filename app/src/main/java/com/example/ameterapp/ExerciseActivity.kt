@@ -1,9 +1,11 @@
 package com.example.ameterapp
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.hardware.Sensor
-import android.hardware.SensorManager
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.Environment
@@ -12,10 +14,13 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.ameterapp.Data.ExcelDAO
 import com.example.ameterapp.Data.ExcelModel
 import java.io.File
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
+import java.io.IOException
 import java.util.*
+
 
 class ExerciseActivity : AppCompatActivity(), SensorEventListener {
     //  Declared Buttons
@@ -36,7 +41,6 @@ class ExerciseActivity : AppCompatActivity(), SensorEventListener {
     private var mSensorManager: SensorManager? = null
     private var mAccelerometer: Sensor? = null
     private lateinit var countDownTimer: CountDownTimer
-
 
     private val CSV_HEADER = "ValueOfX,ValueOfY,ValueOfZ"
 //    val TAG: String = "ExecriseActivity"
@@ -78,9 +82,6 @@ class ExerciseActivity : AppCompatActivity(), SensorEventListener {
 
 //      Initialized View
         initSensor()
-//        isExternalStorageReadAble()
-//        isExternalStorageWriteAble()
-//        writeFile()
     }
 
     private fun initSensor() {
@@ -92,42 +93,13 @@ class ExerciseActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    private fun writeFile() {
-        if (isExternalStorageWriteAble()) {
-            val file: File = File(Environment.getExternalStorageDirectory(), "HELLO")
-        }
-    }
-
-    private fun isExternalStorageWriteAble(): Boolean {
-        return if (Environment.MEDIA_MOUNTED == Environment.getExternalStorageState()) {
-            Toast.makeText(applicationContext, "Writeable", Toast.LENGTH_SHORT).show()
-            true
-        } else {
-            Toast.makeText(applicationContext, "Not Able to write", Toast.LENGTH_SHORT).show()
-            false
-        }
-    }
-
-    private fun isExternalStorageReadAble(): Boolean {
-        return if (Environment.MEDIA_MOUNTED ==
-                Environment.getExternalStorageState() ||
-                Environment.MEDIA_MOUNTED_READ_ONLY == Environment.getExternalStorageState()
-        ) {
-            Toast.makeText(applicationContext, "Readable", Toast.LENGTH_SHORT).show()
-            true
-        } else {
-            Toast.makeText(applicationContext, "Not Able To Read", Toast.LENGTH_SHORT).show()
-            false
-        }
-    }
-
     //    Start Exercise Now Function
     private fun startExerciseNow() {
         //      Default Sensor
         mSensorManager?.registerListener(
-                this,
-                mAccelerometer,
-                SensorManager.SENSOR_DELAY_NORMAL
+            this,
+            mAccelerometer,
+            SensorManager.SENSOR_DELAY_NORMAL
         )
         startMyCounter()
         countDownTimer.start()
@@ -167,11 +139,11 @@ class ExerciseActivity : AppCompatActivity(), SensorEventListener {
         mValueNumbOfY?.text = mY
         mValueNumbOfZ?.text = mZ
 
-        val myValues = listOf(
-                ExcelModel( 0,mX, mY, mZ)
-        )
+//        val myValues = listOf(
+//                ExcelModel(0, mX, mY, mZ)
+//        )
 
-
+        val entry: String = "$mX , $mY , $mZ"
 
 //        saveAndDisplayValues(mX, mY, mZ)
     }
@@ -226,11 +198,11 @@ class ExerciseActivity : AppCompatActivity(), SensorEventListener {
 
     override fun onResume() {
         mSensorManager!!.registerListener(
-                this,
-                mSensorManager?.getDefaultSensor(
-                        Sensor.TYPE_ACCELEROMETER
-                ),
-                SensorManager.SENSOR_DELAY_NORMAL
+            this,
+            mSensorManager?.getDefaultSensor(
+                Sensor.TYPE_ACCELEROMETER
+            ),
+            SensorManager.SENSOR_DELAY_NORMAL
         )
         super.onResume()
     }
