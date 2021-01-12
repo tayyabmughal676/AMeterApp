@@ -155,57 +155,13 @@ class ExerciseActivity : AppCompatActivity(), SensorEventListener {
         } catch (e: IOException) {
             e.printStackTrace()
         }
-
-//        val myValues = listOf(
-//                ExcelModel(0, mX, mY, mZ)
-//        )
-
-        val entry: String = "$mX , $mY , $mZ"
-
-//        saveAndDisplayValues(mX, mY, mZ)
     }
 
     //    Submit Exercise Data to CSV File
     private fun submitExerciseData() {
         Toast.makeText(this, "Saved!", Toast.LENGTH_SHORT).show()
     }
-
-//    private fun saveAndDisplayValues(mX: String?, mY: String?, mZ: String?) {
-//
-//        var fileWriter: FileWriter? = null
-//        try {
-//            fileWriter = FileWriter("excel.csv")
-//
-//            fileWriter.append(CSV_HEADER)
-//            fileWriter.append('\n')
-//
-//            for (myValue in myValues) {
-//                fileWriter.append(myValue.valueOfX)
-//                fileWriter.append(',')
-//                fileWriter.append(myValue.valueOfY)
-//                fileWriter.append(',')
-//                fileWriter.append(myValue.valueOfZ)
-//                fileWriter.append('\n')
-//            }
-//
-//            println("Write CSV successfully!")
-//        } catch (e: Exception) {
-//            println("Writing CSV error!")
-//            e.printStackTrace()
-//        } finally {
-//            try {
-//                fileWriter!!.flush()
-//                fileWriter.close()
-//            } catch (e: IOException) {
-//                println("Flushing/closing error!")
-//                e.printStackTrace()
-//            }
-//        }
-//
-//    }
-
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
-
     }
 
     override fun onStop() {
