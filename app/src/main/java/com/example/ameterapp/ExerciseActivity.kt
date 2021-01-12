@@ -1,26 +1,22 @@
 package com.example.ameterapp
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
 import android.os.CountDownTimer
-import android.os.Environment
 import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.ameterapp.Data.ExcelModel
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.*
-
+import kotlin.collections.HashMap
 
 class ExerciseActivity : AppCompatActivity(), SensorEventListener {
     //  Declared Buttons
@@ -45,13 +41,17 @@ class ExerciseActivity : AppCompatActivity(), SensorEventListener {
     private val CSV_HEADER = "ValueOfX,ValueOfY,ValueOfZ"
 //    val TAG: String = "ExecriseActivity"
 
+    var filename = "text.txt"
+    var filepath = "MyFileDir"
+    var filecontent = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_exercise)
 
         //      Initialized Get Intent Data
         val userExerciseName = intent!!.getStringExtra("UserMessage")
-        Toast.makeText(applicationContext, "$userExerciseName", Toast.LENGTH_SHORT).show()
+//        Toast.makeText(applicationContext, "$userExerciseName", Toast.LENGTH_SHORT).show()
 
         //        Initialized X, Y, Z
         mValueNumbOfX = findViewById(R.id.valueNumOfX)
@@ -74,7 +74,6 @@ class ExerciseActivity : AppCompatActivity(), SensorEventListener {
         //        Set Clicks
         mStartExerciseBtn.setOnClickListener {
             startExerciseNow()
-
         }
         mStopBtn.setOnClickListener {
             stopAction()
@@ -97,9 +96,9 @@ class ExerciseActivity : AppCompatActivity(), SensorEventListener {
     private fun startExerciseNow() {
         //      Default Sensor
         mSensorManager?.registerListener(
-            this,
-            mAccelerometer,
-            SensorManager.SENSOR_DELAY_NORMAL
+                this,
+                mAccelerometer,
+                SensorManager.SENSOR_DELAY_NORMAL
         )
         startMyCounter()
         countDownTimer.start()
@@ -138,6 +137,24 @@ class ExerciseActivity : AppCompatActivity(), SensorEventListener {
         mValueNumbOfX?.text = mX
         mValueNumbOfY?.text = mY
         mValueNumbOfZ?.text = mZ
+
+        //x value
+        val mMap = HashMap<String, String>()
+        mMap["X"] = mX
+        mMap["Y"] = mY
+        mMap["Z"] = mZ
+
+        filecontent = mMap.toString()
+        val myExternalFile = File(getExternalFilesDir(filepath), filename)
+        var fos: FileOutputStream? = null
+        try {
+            fos = FileOutputStream(myExternalFile)
+            fos.write(filecontent.toByteArray())
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
 
 //        val myValues = listOf(
 //                ExcelModel(0, mX, mY, mZ)
@@ -197,19 +214,19 @@ class ExerciseActivity : AppCompatActivity(), SensorEventListener {
     }
 
     override fun onResume() {
-        mSensorManager!!.registerListener(
-            this,
-            mSensorManager?.getDefaultSensor(
-                Sensor.TYPE_ACCELEROMETER
-            ),
-            SensorManager.SENSOR_DELAY_NORMAL
-        )
         super.onResume()
+        mSensorManager!!.registerListener(
+                this,
+                mSensorManager?.getDefaultSensor(
+                        Sensor.TYPE_ACCELEROMETER
+                ),
+                SensorManager.SENSOR_DELAY_NORMAL
+        )
     }
 
     override fun onPause() {
-        mSensorManager!!.unregisterListener(this)
         super.onPause()
+        mSensorManager!!.unregisterListener(this)
     }
 
     override fun onDestroy() {

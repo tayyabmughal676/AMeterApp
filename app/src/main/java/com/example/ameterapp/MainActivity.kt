@@ -34,6 +34,7 @@ class MainActivity : AppCompatActivity() {
 //        Checking String is empty
         if (name.isEmpty()) {
             mGetExerciseName.error = "Enter Exercise Name"
+            mGetExerciseName.requestFocus()
             return
         }
 
